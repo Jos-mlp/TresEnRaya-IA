@@ -1,5 +1,8 @@
+import math
 
 tablero=[]#Nuestro tablero sera un array
+TABLERO_COLUMNAS = 3
+TABLERO_FILAS = 3
 #Inicializamos nuestro tablero con nueve posiciones
 for i in range(9):
     tablero.append(" ")
@@ -33,13 +36,13 @@ def ColocarFicha(ficha):
         columna=Coordenada("Columna entre [1 y 3]: ",1,3) - 1 #Restamos uno porque nuestro rango esta en [0,2]
         
         #Como mi tablero es de 3x3 hago un calculo para saber donde esta mi dato
-        casilla = fila*3+columna
+        casilla = fila*TABLERO_COLUMNAS+columna
         if(tablero[casilla] != " "):
             #Esa casilla ya esta cubierta
             print("La casilla ya esta ocupada")
         else:
             tablero[casilla]=ficha
-            return
+            return casilla
 
 #Funcion para pintar el tablero
 def PintarTablero():
@@ -52,6 +55,44 @@ def PintarTablero():
             print("| ",tablero[pos], " ", end='')
         print("|\n",("-"*18))
 
+
+def numeroHermanos(casilla,ficha, v, h):
+    f = math.floor(casilla/TABLERO_COLUMNAS) #Obtengo la fila como numero entero
+    c = casilla % TABLERO_COLUMNAS #Obtengo la columna como el decimal de un operador
+    fila_nueva = f + v
+    if (fila_nueva < 0 or fila_nueva >= TABLERO_FILAS):
+        return 0    #Estamos en el limite
+    columna_nueva = c + h
+    if (columna_nueva < 0 or columna_nueva >= TABLERO_COLUMNAS):
+        return 0    #Estamos en el limita
+    
+    #No estamos en el limite asi que
+    #Calculamos nueva posicion y vemos si esta la misma ficha
+    pos = (fila_nueva * TABLERO_COLUMNAS + columna_nueva)
+    if(tablero[pos]!=ficha):
+        return 0
+    else:
+        return 1 + numeroHermanos(pos,ficha,v,h)
+
+#Metodo para comprobar quien es el ganador
+#Comprobamos que la ficha colocada en la casilla indicada tiene hermanos iguales que formen 3 en raya
+def ComprobarGanador(casilla,ficha):
+    hermanos = numeroHermanos(casilla,ficha,-1,-1) + numeroHermanos(casilla,ficha,1,1)
+    if (hermanos==2):
+        return True
+    
+    hermanos = numeroHermanos(casilla,ficha,1,-1) + numeroHermanos(casilla,ficha,-1,1)
+    if (hermanos==2):
+        return True
+    
+    hermanos = numeroHermanos(casilla,ficha,-1,0) + numeroHermanos(casilla,ficha,1,0)
+    if (hermanos==2):
+        return True
+    
+    hermanos = numeroHermanos(casilla,ficha,0,-1) + numeroHermanos(casilla,ficha,0,1)
+    if (hermanos==2):
+        return True
+    
 
 #Funcion principal,(Controla todo el juego y funciones)
 def run_game():
@@ -66,18 +107,23 @@ def run_game():
         #Pintamos el tablero
         PintarTablero()
 
-        #Pedimos posiciones para la ficha
-        ColocarFicha('X' if (fichasEnTablero&1) else 'O')
-        
+        #Pedimos posiciones para la ficha, y mandamos la ficha a colocar
+        ficha = ('X' if (fichasEnTablero&1) else 'O')
+        casilla = ColocarFicha(ficha)
+
+        #Comprueba ganador enviando la casilla en donde se coloco la ultima ficha
+        if (ComprobarGanador(casilla,ficha)):
+            continuar = False
+            print("Has ganado")
+
+
+        #Se actualizan las fichas colocadas
         fichasEnTablero+=1
         #Comprueba que el tablero no este lleno
         if(fichasEnTablero == 9):
             #Si el tablero esta lleno termina el juego
             continuar=False
-        
-
-
-    
+    PintarTablero()
 if __name__ == "__main__":
     run_game()
 
